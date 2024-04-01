@@ -14,7 +14,7 @@ function DocView() {
   const [uploadedSignature, setUploadedSignature] = useState();
   const [numPages, setNumPages] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
-  const [imageSize, setImageSize] = useState({ width: 100, height: 100 }); 
+  const [imageSize, setImageSize] = useState({ width: 100, height: 50 }); 
   const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
   const [resizableHeight, setResizableHeight] = useState(50);
   const [resizableWidth, setResizableWidth] = useState(100);
@@ -46,8 +46,8 @@ function DocView() {
     const updatedSignatures = [...signatures];
     updatedSignatures[index] = {
       ...updatedSignatures[index],
-      height: size.height,
-      width: size.width 
+      height: Math.round(size.height),
+      width: Math.round(size.height * 3.125)
     };
 
     //console.log("Updated Height:", size.height, "Width:", size.width);
@@ -55,7 +55,8 @@ function DocView() {
   };
 
   const addSignature = () => {
-    setSignatures([...signatures, { id: Date.now(), x: 100, y: 100, height: 200, width: 200}]);
+    
+    setSignatures([...signatures, { id: Date.now(), x: 100, y: 100, height: 40, width: 145}]);
   };
 
   const deleteSignature = (id) => {
@@ -64,7 +65,7 @@ function DocView() {
 
   const handleDrag = (index, e, ui) => {
     const { x, y } = ui;
-    console.log("New coordinates:", { x, y });
+    //console.log("New coordinates:", { x, y });
     const updatedSignatures = [...signatures];
     updatedSignatures[index] = { ...updatedSignatures[index], x, y };
     setSignatures(updatedSignatures);
@@ -76,14 +77,15 @@ const applyChange = async () => {
     
 
     for (const signature of signatures) {
-      
+      let page_number = Math.floor(signature.y / 850);
+
       const formData = new FormData();
       console.log(uploadedFile)
       formData.append('document', uploadedFile);
       formData.append('signature_image', uploadedSignature);
-      formData.append('pageNum', pageNumber - 1);
-      formData.append('x_cord', signature.x);
-      formData.append('y_cord', signature.y+22);
+      formData.append('pageNum', page_number);
+      formData.append('x_cord', signature.x-15);
+      formData.append('y_cord', (signature.y%850)+22);
       formData.append('image_height', signature.height);
       formData.append('image_width', signature.width);
   
@@ -115,10 +117,7 @@ const applyChange = async () => {
         {uploadedFile && (
           
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <button onClick={goToPreviousPage} disabled={pageNumber <= 1}>
-              Previous Page
-            </button>
-            <div ref={parentDivRef} style={{position: "relative", width: "615px", height: "900px", overflow: "visible" }}>
+            <div ref={parentDivRef} style={{position: "relative", width: "615px", height: "900px", overflowY: "auto"}}>
             <div style={{ position: "absolute", zIndex: 1 }}>
               
             {signatures.map((signature, index) => (
@@ -128,8 +127,8 @@ const applyChange = async () => {
                       bounds={{
                         top: 0,
                         left: 0,
-                        right: 615-signature.width, 
-                        bottom: 800
+                        right: 576, 
+
                       }}
                       >
                       <div className="box no-cursor" >
@@ -137,7 +136,8 @@ const applyChange = async () => {
                         <strong className="cursor" ><div style={{ border: '1px solid black', backgroundColor: 'white' }}>Click Here And Drag</div></strong>
                         <button onClick={() => deleteSignature(signature.id)}>Delete</button>
                         </div>
-                        <ResizableBox className="box" width={200} height={200} onResize={(event, { size }) => onResize(index, event, { size })} resizeHandles={['sw', 'se', 's', 'e', 'w']}
+                        <ResizableBox className="box" width={115} height={40} onResize={(event, { size }) => onResize(index, event, { size })} resizeHandles={['sw', 'se', 's', 'e', 'w']
+                        } lockAspectRatio = {true}
 			                  >
                           <div style={{ width: '100%', height: '100%', border: '1px solid black' }}>
 				                  <img src={uploadedSignature} alt="Uploaded Signature" style={{ width: "100%", height: "100%" }} />
@@ -150,13 +150,14 @@ const applyChange = async () => {
                 
             </div>
             
-              <Document file={uploadedFile} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page pageNumber={pageNumber} width={613} height={700} renderTextLayer={false} />
-              </Document>
+            <Document file={uploadedFile} onLoadSuccess={onDocumentLoadSuccess} pageLayout="continuous">
+              {Array.from(new Array(numPages), (x, index) => (
+                <div key={`page_${index + 1}`} style={{ position: "relative", width: "615px", maxHeight: '850px', overflow: "hidden", border: '1px solid #000' }}>
+                  <Page pageNumber={index + 1} width={613} renderTextLayer={false} />
+                </div>
+              ))}
+            </Document>
             </div>
-            <button onClick={goToNextPage} disabled={pageNumber >= numPages}>
-              Next Page
-            </button>
             <div>
               {<button onClick={addSignature}>Add Signature</button>}
               <button onClick={applyChange}>Apply Changes</button>
