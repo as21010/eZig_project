@@ -48,11 +48,11 @@ function DocView() {
   };
 
   const addSignature = () => {
-    event.preventDefault();
+
     var popup = document.getElementById('myPopupSig');
     popup.classList.toggle('show');
     const signatureImage = uploadedSignature.getTrimmedCanvas().toDataURL('image/png');
-    console.log(signatureImage)
+
     setSignatures([...signatures, { id: Date.now(), image: signatureImage, x: 100, y: 100, height: 40, width: 145}]);
   };
 
@@ -103,6 +103,7 @@ function DocView() {
   };
 
   const popSig=() =>{
+    uploadedSignature.clear()
     var popup = document.getElementById('myPopupOptSig');
     popup.classList.toggle('show');
     var popup = document.getElementById('myPopupSig');
@@ -139,7 +140,7 @@ function DocView() {
     event.preventDefault();
     var popup = document.getElementById('myPopup');
     popup.classList.toggle('show');
-    console.log(popupText)
+    //console.log(popupText)
     setText([...texts, { id: Date.now(), content: popupText, x: 110, y: 100, fontSize: 12}]);
   }
 
@@ -189,10 +190,11 @@ const applyChange = async () => {
     }
 
     for (const text of texts) {
+      
       let page_number = Math.floor(text.y / 850);
       let y_calc = Math.floor(((4/5)*text.fontSize)+25)
       const formData = new FormData();
-      console.log(y_calc)
+      console.log(text.content)
       formData.append('document', curr);
       formData.append('text', text.content);
       formData.append('pageNum', page_number);
