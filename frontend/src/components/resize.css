@@ -64,10 +64,13 @@
     transform: rotate(45deg);
   }
 
-  .popup {
-    display: inline-block;
+  .popup, .popupSig, .popupOptSig {
+    display: flex;
+    position: absolute;
+    
+  
 }
-.popup .popuptext {
+.popup .popuptext, .popupSig {
     visibility: hidden;
     width: 160px;
     background-color: #b1b1b1;
@@ -79,7 +82,19 @@
     top:50px;
     right:150px;
 }
-.popup .show {
+.popupCanvas{
+  visibility: hidden;
+  width: 160px;
+  background-color: white;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 20px;
+  position:relative;
+  top:50px;
+  right:150px;
+}
+.popup .show, .popupSig .show {
     visibility: visible;
     -webkit-animation: fadeIn 1s;
     animation: fadeIn 1s;

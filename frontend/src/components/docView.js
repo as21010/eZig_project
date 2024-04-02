@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Grid from "@material-ui/core/Grid";
 import { Document, Page, pdfjs } from "react-pdf";
+import Button from "@material-ui/core/Button";
 import { useLocation } from "react-router-dom";
 import Draggable, {DraggableCore} from 'react-draggable';
 import { Resizable, ResizableBox } from "react-resizable";
@@ -23,7 +24,6 @@ function DocView() {
   useEffect(() => {
     if (location.state) {
       setUploadedFile(location.state.uploadedFile);
-      setUploadedSignature(location.state.uploadedSignature);
     }
   }, [location.state]);
 
@@ -48,13 +48,25 @@ function DocView() {
   };
 
   const addSignature = () => {
-    
-    setSignatures([...signatures, { id: Date.now(), x: 100, y: 100, height: 40, width: 145}]);
+    event.preventDefault();
+    var popup = document.getElementById('myPopupSig');
+    popup.classList.toggle('show');
+    const signatureImage = uploadedSignature.getTrimmedCanvas().toDataURL('image/png');
+    console.log(signatureImage)
+    setSignatures([...signatures, { id: Date.now(), image: signatureImage, x: 100, y: 100, height: 40, width: 145}]);
   };
+
+  const addExistingSignature = () => {
+    var popup = document.getElementById('myPopupOptSig');
+    popup.classList.toggle('show');
+    const signatureImage = uploadedSignature.getTrimmedCanvas().toDataURL('image/png');
+    setSignatures([...signatures, { id: Date.now(), image: signatureImage, x: 100, y: 100, height: 40, width: 145}]);
+  };
+
   const changeFontSize = (id, add) => {
     const updatedTexts = texts.map((text) => {
       if (text.id === id) {
-        console.log(text.fontSize)
+        //console.log(text.fontSize)
         return { ...text, fontSize: add ? text.fontSize + 1 : text.fontSize - 1 };
       }
       return text;
@@ -71,7 +83,7 @@ function DocView() {
 
   const handleDrag = (index, e, ui) => {
     const { x, y } = ui;
-    console.log("New coordinates:", { x, y });
+    //console.log("New coordinates:", { x, y });
     const updatedSignatures = [...signatures];
     updatedSignatures[index] = { ...updatedSignatures[index], x, y };
     setSignatures(updatedSignatures);
@@ -79,7 +91,7 @@ function DocView() {
 
   const handleDragT = (index, e, ui) => {
     const { x, y } = ui;
-    console.log("New coordinates:", { x, y });
+    //console.log("New coordinates:", { x, y });
     const updatedText = [...texts];
     updatedText[index] = { ...updatedText[index], x, y };
     setText(updatedText);
@@ -89,6 +101,34 @@ function DocView() {
     var popup = document.getElementById('myPopup');
     popup.classList.toggle('show');
   };
+
+  const popSig=() =>{
+    var popup = document.getElementById('myPopupOptSig');
+    popup.classList.toggle('show');
+    var popup = document.getElementById('myPopupSig');
+    popup.classList.toggle('show');
+  };
+
+  const popOptSig=() =>{
+    var popup = document.getElementById('myPopupOptSig');
+    popup.classList.toggle('show');
+  };
+
+  const clearOptSig=() =>{
+    var popup = document.getElementById('myPopupOptSig');
+    popup.classList.toggle('show');
+  }
+
+  const cancelCanvas=() =>{
+    uploadedSignature.clear()
+    var popup = document.getElementById('myPopupSig');
+    popup.classList.toggle('show');
+  }
+
+  const cancelText=() =>{
+    var popup = document.getElementById('myPopup');
+    popup.classList.toggle('show');
+  }
 
 
   const handlePopupTextChange = (event) => {
@@ -103,6 +143,9 @@ function DocView() {
     setText([...texts, { id: Date.now(), content: popupText, x: 110, y: 100, fontSize: 12}]);
   }
 
+  const handleClear = () => {
+    uploadedSignature.clear()
+  };
 
 const applyChange = async () => {
   try {    
@@ -116,7 +159,7 @@ const applyChange = async () => {
       //console.log(signature.x)
       //console.log((signature.y%850))
       formData.append('document', curr);
-      formData.append('signature_image', uploadedSignature);
+      formData.append('signature_image', signature.image);
       formData.append('pageNum', page_number);
       formData.append('x_cord', signature.x-15);
       formData.append('y_cord', (signature.y%850)+22);
@@ -138,7 +181,7 @@ const applyChange = async () => {
 
     for (const text of texts) {
       let page_number = Math.floor(text.y / 850);
-      let y_calc = Math.floor(((4/5)*text.fontSize)+27)
+      let y_calc = Math.floor(((4/5)*text.fontSize)+25)
       const formData = new FormData();
       console.log(y_calc)
       formData.append('document', curr);
@@ -207,7 +250,7 @@ const applyChange = async () => {
                         } lockAspectRatio = {true}
 			                  >
                           <div style={{ width: '100%', height: '100%', border: '1px solid black' }}>
-				                  <img src={uploadedSignature} alt="Uploaded Signature" style={{ width: "100%", height: "100%" }} />
+				                  <img src={signature.image} alt="Uploaded Signature" style={{ width: "100%", height: "100%" }} />
                           </div>
                         </ResizableBox>                        
                       </div>
@@ -256,15 +299,39 @@ const applyChange = async () => {
               ))}
             </Document>
             </div>
-            <div>
-              {<button onClick={addSignature}>Add Signature</button>}
-              <button onClick={applyChange}>Apply Changes</button>
-              <button onClick={pop}>Add Text</button>
+             <div>
+              {<Button onClick={popOptSig}>Add Signature</Button>}                                     
+              <Button onClick={applyChange}>Apply Changes</Button>
+              <Button onClick={pop}>Add Text</Button>
+             </div>
+              
+              
+
+            <div className="popupSig" >
+            <div className="popupOptSig">
+                <div className="popuptext" id = "myPopupOptSig">
+                <Button onClick={popSig}>New Signature</Button>
+                {uploadedSignature && <Button onClick={addExistingSignature}>Use Current Signature</Button>}
+                <Button onClick={clearOptSig}>Cancel</Button>
+                </div>
+              </div>
+              <div className="popupCanvas" id="myPopupSig" style={{width: 300, height: 90, border:"2px solid black"}}>
+                <div style={{width: 300, height: 70, border:"2px solid black"}}>
+                <SignatureCanvas
+                canvasProps={{width: 300, height: 70, className: 'sigCanvas'}}
+                ref = {data =>setUploadedSignature(data)}
                 
-                  <div className="popup">
+              />
+              </div>
+               <Button onClick={addSignature}>Save</Button>
+               <Button onClick={handleClear}>Clear</Button>
+               <Button onClick={cancelCanvas}>Cancel</Button>
+              </div>
+                  <div className="popup" >
                     <span className="popuptext" id="myPopup">
                       Enter Text Here: <input type="text" onChange={handlePopupTextChange} />
-                      <button onClick={addText}>Save</button>
+                      <Button onClick={addText}>Save</Button>
+                      <Button onClick={cancelText}>Cancel</Button>
                     </span>
                   </div>
                 

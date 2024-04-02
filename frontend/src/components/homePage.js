@@ -12,8 +12,6 @@ import { Resizable, ResizableBox } from "react-resizable";
 
 export default function HomePage() {
   const [selectedFile, setSelectedFile] = useState(null);
-  const[sign, setSign] = useState();
-  const[signImage, setSignImage] = useState(null);
   const navigate = useNavigate();
   
   const handleFileChange = (event) => {
@@ -21,22 +19,13 @@ export default function HomePage() {
   };
 
   const handleSubmit = () => {
-    if (selectedFile && signImage) {
-      navigate("/docView", { state: { uploadedFile: selectedFile, uploadedSignature: signImage }});
+    if (selectedFile) {
+      navigate("/docView", { state: { uploadedFile: selectedFile}});
     } else {
       alert("Please select a PDF and sign");
     }
   };
 
-  const handleClear = () => {
-    sign.clear()
-  };
-  
-  const handleSave = () => {
-    setSignImage(sign.getTrimmedCanvas().toDataURL('image/png'));
-    
-  }
-  const ResizableBox = require('react-resizable').ResizableBox;
   
     
     return (
@@ -54,20 +43,6 @@ export default function HomePage() {
             type="file" 
             accept=".pdf" 
             onChange={handleFileChange} />
-            <div>
-              <div style={{border:"2px solid black"}}>
-                <SignatureCanvas
-                canvasProps={{width: 300, height: 70, className: 'sigCanvas'}}
-                ref = {data =>setSign(data)}
-              />
-            </div>
-            <Button onClick={handleClear}>
-              Clear
-            </Button>
-            <Button onClick={handleSave}>
-              Save
-            </Button>
-            </div>
             </FormControl>
             </Grid>
             <Grid item xs={12} align="center">
