@@ -19,6 +19,7 @@ function DocView() {
   const [resizableHeight, setResizableHeight] = useState(50);
   const [resizableWidth, setResizableWidth] = useState(100);
   const [signatures, setSignatures] = useState([]);
+  const [texts, setText] = useState([]);
   const parentDivRef = React.useRef(null);
 
   useEffect(() => {
@@ -65,7 +66,7 @@ function DocView() {
 
   const handleDrag = (index, e, ui) => {
     const { x, y } = ui;
-    //console.log("New coordinates:", { x, y });
+    console.log("New coordinates:", { x, y });
     const updatedSignatures = [...signatures];
     updatedSignatures[index] = { ...updatedSignatures[index], x, y };
     setSignatures(updatedSignatures);
@@ -75,13 +76,15 @@ function DocView() {
 const applyChange = async () => {
   try {    
     
-
+    let curr = uploadedFile
     for (const signature of signatures) {
       let page_number = Math.floor(signature.y / 850);
 
       const formData = new FormData();
-      console.log(uploadedFile)
-      formData.append('document', uploadedFile);
+      console.log(curr)
+      console.log(signature.x)
+      console.log((signature.y%850))
+      formData.append('document', curr);
       formData.append('signature_image', uploadedSignature);
       formData.append('pageNum', page_number);
       formData.append('x_cord', signature.x-15);
@@ -97,16 +100,18 @@ const applyChange = async () => {
 	    const modified = await response.blob();
 
       const modifiedFile = new File([modified], 'modified_file.pdf', { type: 'application/pdf', lastModified: Date.now() });
-      setUploadedFile(modifiedFile);
+      curr = modifiedFile
     
     }
-	
+    setUploadedFile(curr);
     console.log("Changes applied successfully.");
 	
   } catch (error) {
     console.error("Error applying changes:", error);
   }
 };
+
+
 
 
   return (
@@ -121,6 +126,7 @@ const applyChange = async () => {
             <div style={{ position: "absolute", zIndex: 1 }}>
               
             {signatures.map((signature, index) => (
+              
                     <Draggable handle="strong" key={signature.id}
                       onDrag={(e, ui) => handleDrag(index, e, ui)}
                       position={{ x: signature.x, y: signature.y }} 
@@ -131,9 +137,10 @@ const applyChange = async () => {
 
                       }}
                       >
-                      <div className="box no-cursor" >
+                      <div className="box no-cursor" style={{
+                      position: "absolute"}}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <strong className="cursor" ><div style={{ border: '1px solid black', backgroundColor: 'white' }}>Click Here And Drag</div></strong>
+                        <strong className="cursor" ><div style={{ border: '1px solid black', backgroundColor: 'white', width: '150px', height: '20px' }}>Click Here And Drag</div></strong>
                         <button onClick={() => deleteSignature(signature.id)}>Delete</button>
                         </div>
                         <ResizableBox className="box" width={115} height={40} onResize={(event, { size }) => onResize(index, event, { size })} resizeHandles={['sw', 'se', 's', 'e', 'w']
@@ -145,6 +152,7 @@ const applyChange = async () => {
                         </ResizableBox>                        
                       </div>
                     </Draggable>
+                    
                   ))}
 
                 
@@ -152,7 +160,7 @@ const applyChange = async () => {
             
             <Document file={uploadedFile} onLoadSuccess={onDocumentLoadSuccess} pageLayout="continuous">
               {Array.from(new Array(numPages), (x, index) => (
-                <div key={`page_${index + 1}`} style={{ position: "relative", width: "615px", maxHeight: '850px', overflow: "hidden", border: '1px solid #000' }}>
+                <div key={`page_${index + 1}`} style={{ position: "relative", width: "615px", maxHeight: '850px', overflow: "hidden"}}>
                   <Page pageNumber={index + 1} width={613} renderTextLayer={false} />
                 </div>
               ))}
@@ -161,6 +169,7 @@ const applyChange = async () => {
             <div>
               {<button onClick={addSignature}>Add Signature</button>}
               <button onClick={applyChange}>Apply Changes</button>
+              <button >Add Text</button>
             </div>     
           </div>
         )}

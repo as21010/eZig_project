@@ -22,9 +22,8 @@ def edit_image_doc(in_file, out_file, inimage, Numpage, x_cord, y_cord, imgH, im
     
 
     rect = fitz.Rect(x_cord, y_cord, x_cord+imgW, y_cord+imgH)  
-
    
-    page.insert_image(rect, filename=image_path)  
+    page.insert_image(rect, filename=image_path)   
     os.remove(image_path)
 
     if in_file == out_file:

@@ -1,5 +1,8 @@
 from django.shortcuts import render
 import json
+import shutil
+from django.conf import settings
+import os
 from django.http import HttpResponse, JsonResponse
 from .document_utils import edit_image_doc, edit_text_doc
 from django.views.decorators.csrf import csrf_exempt
@@ -22,10 +25,16 @@ def insert_image(request):
         yCord = int(request.POST.get('y_cord'))
         imgHeight = int(request.POST.get('image_height'))
         imgWidth = int(request.POST.get('image_width'))
-        modified_filename = "modified_file"
-        edit_image_doc(inFile, modified_filename, inImage, numPage, xCord, yCord, imgHeight, imgWidth)
+        modified_filename = "modified_file.pdf"
+
+  
+        modified_file_path = os.path.join(settings.MEDIA_ROOT, modified_filename)
+        with open(modified_file_path, 'wb') as modified_file:
+            shutil.copyfileobj(inFile, modified_file)
+
+        edit_image_doc(modified_file_path, modified_file_path, inImage, numPage, xCord, yCord, imgHeight, imgWidth)
     
-        with open(modified_filename, 'rb') as f:
+        with open(modified_file_path, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/pdf')
             return response
     else:
