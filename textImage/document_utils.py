@@ -32,7 +32,7 @@ def edit_image_doc(in_file, out_file, inimage, Numpage, x_cord, y_cord, imgH, im
         doc.save(out_file)  
 
 
-def edit_text_doc(in_file, out_file, intext, Numpage, x_cord, y_cord):
+def edit_text_doc(in_file, out_file, intext, Numpage, x_cord, y_cord, fontSize):
     doc = fitz.open(in_file) 
     page = doc[Numpage]
     p = fitz.Point(x_cord, y_cord) 
@@ -42,7 +42,7 @@ def edit_text_doc(in_file, out_file, intext, Numpage, x_cord, y_cord):
     rc = page.insert_text(p,  
                         text,  
                         fontname = "helv",  
-                        fontsize = 11,  
+                        fontsize = fontSize,  
                         rotate = 0,  
                         )
 

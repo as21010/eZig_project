@@ -48,10 +48,16 @@ def insert_text(request):
         numPage = int(request.POST.get('pageNum'))
         xCord = int(request.POST.get('x_cord'))
         yCord = int(request.POST.get('y_cord'))
-        modified_filename = f"modified_{inFile}"
-        edit_text_doc(inFile, inFile, inText, numPage, xCord, yCord)
+        fontSize = int(request.POST.get('font_size'))
+        modified_filename = "modified_file.pdf"
+
+        modified_file_path = os.path.join(settings.MEDIA_ROOT, modified_filename)
+        with open(modified_file_path, 'wb') as modified_file:
+            shutil.copyfileobj(inFile, modified_file)
+        
+        edit_text_doc(modified_file_path, modified_file_path, inText, numPage, xCord, yCord, fontSize)
         print("worked")
-        with open(inFile, 'rb') as f:
+        with open(modified_file_path, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/pdf')
             return response
     else:

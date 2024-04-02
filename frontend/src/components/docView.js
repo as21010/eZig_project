@@ -4,6 +4,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import { useLocation } from "react-router-dom";
 import Draggable, {DraggableCore} from 'react-draggable';
 import { Resizable, ResizableBox } from "react-resizable";
+import SignatureCanvas from 'react-signature-canvas'
 import "./resize.css"
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`
@@ -13,14 +14,11 @@ function DocView() {
   const [uploadedFile, setUploadedFile] = useState();
   const [uploadedSignature, setUploadedSignature] = useState();
   const [numPages, setNumPages] = useState(0);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [imageSize, setImageSize] = useState({ width: 100, height: 50 }); 
-  const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
-  const [resizableHeight, setResizableHeight] = useState(50);
-  const [resizableWidth, setResizableWidth] = useState(100);
   const [signatures, setSignatures] = useState([]);
   const [texts, setText] = useState([]);
+  const [popupText, setPopupText] = useState('');
   const parentDivRef = React.useRef(null);
+  
 
   useEffect(() => {
     if (location.state) {
@@ -35,13 +33,7 @@ function DocView() {
     setNumPages(numPages);
   };
 
-  const goToPreviousPage = () => {
-    setPageNumber(Math.max(pageNumber - 1, 1));
-  };
-
-  const goToNextPage = () => {
-    setPageNumber(Math.min(pageNumber + 1, numPages));
-  };
+  
 
   const onResize = (index, event, { size }) => {
     const updatedSignatures = [...signatures];
@@ -59,9 +51,22 @@ function DocView() {
     
     setSignatures([...signatures, { id: Date.now(), x: 100, y: 100, height: 40, width: 145}]);
   };
+  const changeFontSize = (id, add) => {
+    const updatedTexts = texts.map((text) => {
+      if (text.id === id) {
+        console.log(text.fontSize)
+        return { ...text, fontSize: add ? text.fontSize + 1 : text.fontSize - 1 };
+      }
+      return text;
+    });
+    setText(updatedTexts);
+  };
 
   const deleteSignature = (id) => {
     setSignatures(signatures.filter((signature) => signature.id !== id));
+  };
+  const deleteText = (id) => {
+    setText(texts.filter((texts) => texts.id !== id));
   };
 
   const handleDrag = (index, e, ui) => {
@@ -72,6 +77,32 @@ function DocView() {
     setSignatures(updatedSignatures);
   };
 
+  const handleDragT = (index, e, ui) => {
+    const { x, y } = ui;
+    console.log("New coordinates:", { x, y });
+    const updatedText = [...texts];
+    updatedText[index] = { ...updatedText[index], x, y };
+    setText(updatedText);
+  };
+
+  const pop=() =>{
+    var popup = document.getElementById('myPopup');
+    popup.classList.toggle('show');
+  };
+
+
+  const handlePopupTextChange = (event) => {
+    setPopupText(event.target.value);
+  };
+
+  const addText = () => {
+    event.preventDefault();
+    var popup = document.getElementById('myPopup');
+    popup.classList.toggle('show');
+    console.log(popupText)
+    setText([...texts, { id: Date.now(), content: popupText, x: 110, y: 100, fontSize: 12}]);
+  }
+
 
 const applyChange = async () => {
   try {    
@@ -79,11 +110,11 @@ const applyChange = async () => {
     let curr = uploadedFile
     for (const signature of signatures) {
       let page_number = Math.floor(signature.y / 850);
-
+      
       const formData = new FormData();
-      console.log(curr)
-      console.log(signature.x)
-      console.log((signature.y%850))
+      //console.log(curr)
+      //console.log(signature.x)
+      //console.log((signature.y%850))
       formData.append('document', curr);
       formData.append('signature_image', uploadedSignature);
       formData.append('pageNum', page_number);
@@ -97,15 +128,44 @@ const applyChange = async () => {
         body: formData,
       });
       
+
 	    const modified = await response.blob();
 
       const modifiedFile = new File([modified], 'modified_file.pdf', { type: 'application/pdf', lastModified: Date.now() });
       curr = modifiedFile
     
     }
+
+    for (const text of texts) {
+      let page_number = Math.floor(text.y / 850);
+      let y_calc = Math.floor(((4/5)*text.fontSize)+27)
+      const formData = new FormData();
+      console.log(y_calc)
+      formData.append('document', curr);
+      formData.append('text', text.content);
+      formData.append('pageNum', page_number);
+      formData.append('x_cord', text.x+2);
+      formData.append('y_cord', (text.y%850)+y_calc);
+      formData.append('font_size',text.fontSize-1)
+  
+      const response = await fetch("textImage/addText/", {
+        method: "POST",
+        body: formData,
+      });
+      
+
+	    const modified = await response.blob();
+
+      const modifiedFile = new File([modified], 'modified_file.pdf', { type: 'application/pdf', lastModified: Date.now() });
+      curr = modifiedFile
+    
+    }
+
+
     setUploadedFile(curr);
     console.log("Changes applied successfully.");
-	
+    setSignatures([]);
+    setText([]);
   } catch (error) {
     console.error("Error applying changes:", error);
   }
@@ -157,6 +217,36 @@ const applyChange = async () => {
 
                 
             </div>
+            <div style={{ position: "absolute", zIndex: 2 }}>
+
+            {texts.map((texts, index) => (
+              
+              <Draggable handle="strong" key={texts.id}
+                onDrag={(e, ui) => handleDragT(index, e, ui)}
+                position={{ x: texts.x, y: texts.y }} 
+                bounds={{
+                  top: 0,
+                  left: 0,
+                  right: 576, 
+
+                }}
+                >
+                <div className="box no-cursor" style={{
+                position: "absolute"}}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <strong className="cursor" ><div style={{ border: '1px solid black', backgroundColor: 'white', width: '150px', height: '20px' }}>Click Here And Drag</div></strong>
+                  <button onClick={() => deleteText(texts.id)}>Delete</button>
+                  </div>
+                  <div style={{ border: '1px solid #000000', display: 'flex', fontSize: `${texts.fontSize}px`}}>{texts.content}</div>      
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <button onClick={() => changeFontSize(texts.id, true)}>+</button>
+                  <button onClick={() => changeFontSize(texts.id, false)}>-</button>
+                  </div>      
+                </div>
+              </Draggable>
+              
+            ))}
+            </div>
             
             <Document file={uploadedFile} onLoadSuccess={onDocumentLoadSuccess} pageLayout="continuous">
               {Array.from(new Array(numPages), (x, index) => (
@@ -169,7 +259,16 @@ const applyChange = async () => {
             <div>
               {<button onClick={addSignature}>Add Signature</button>}
               <button onClick={applyChange}>Apply Changes</button>
-              <button >Add Text</button>
+              <button onClick={pop}>Add Text</button>
+                
+                  <div className="popup">
+                    <span className="popuptext" id="myPopup">
+                      Enter Text Here: <input type="text" onChange={handlePopupTextChange} />
+                      <button onClick={addText}>Save</button>
+                    </span>
+                  </div>
+                
+                
             </div>     
           </div>
         )}
