@@ -147,6 +147,15 @@ function DocView() {
     uploadedSignature.clear()
   };
 
+  const downloadFile = () => {
+    const url = URL.createObjectURL(uploadedFile);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'uploaded_file.pdf');
+    document.body.appendChild(link);
+    link.click();
+  };
+
 const applyChange = async () => {
   try {    
     
@@ -303,6 +312,7 @@ const applyChange = async () => {
               {<Button onClick={popOptSig}>Add Signature</Button>}                                     
               <Button onClick={applyChange}>Apply Changes</Button>
               <Button onClick={pop}>Add Text</Button>
+              <Button onClick={downloadFile}>Download</Button>
              </div>
               
               
