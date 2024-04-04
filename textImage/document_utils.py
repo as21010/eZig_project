@@ -8,7 +8,10 @@ import os
 def edit_image_doc(in_file, out_file, inimage, Numpage, x_cord, y_cord, imgH, imgW):
     
     doc = fitz.open(in_file) 
-    num_pages = len(doc)
+  
+
+    for page in doc:
+        page.wrap_contents()
     
     page = doc[Numpage]
     
@@ -20,7 +23,7 @@ def edit_image_doc(in_file, out_file, inimage, Numpage, x_cord, y_cord, imgH, im
         f.write(image_data)
 
     
-
+    print(x_cord, y_cord, x_cord+imgW, y_cord+imgH)
     rect = fitz.Rect(x_cord, y_cord, x_cord+imgW, y_cord+imgH)  
    
     page.insert_image(rect, filename=image_path)   
@@ -34,6 +37,8 @@ def edit_image_doc(in_file, out_file, inimage, Numpage, x_cord, y_cord, imgH, im
 
 def edit_text_doc(in_file, out_file, intext, Numpage, x_cord, y_cord, fontSize):
     doc = fitz.open(in_file) 
+    for page in doc:
+        page.wrap_contents()
     page = doc[Numpage]
     p = fitz.Point(x_cord, y_cord) 
 

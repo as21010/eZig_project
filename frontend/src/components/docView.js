@@ -19,6 +19,7 @@ function DocView() {
   const [texts, setText] = useState([]);
   const [popupText, setPopupText] = useState('');
   const parentDivRef = React.useRef(null);
+
   
 
   useEffect(() => {
@@ -43,7 +44,6 @@ function DocView() {
       width: Math.round(size.height * 3.125)
     };
 
-    //console.log("Updated Height:", size.height, "Width:", size.width);
     setSignatures(updatedSignatures);
   };
 
@@ -66,7 +66,6 @@ function DocView() {
   const changeFontSize = (id, add) => {
     const updatedTexts = texts.map((text) => {
       if (text.id === id) {
-        //console.log(text.fontSize)
         return { ...text, fontSize: add ? text.fontSize + 1 : text.fontSize - 1 };
       }
       return text;
@@ -83,15 +82,14 @@ function DocView() {
 
   const handleDrag = (index, e, ui) => {
     const { x, y } = ui;
-    //console.log("New coordinates:", { x, y });
     const updatedSignatures = [...signatures];
     updatedSignatures[index] = { ...updatedSignatures[index], x, y };
+    console.log(x,y)
     setSignatures(updatedSignatures);
   };
 
   const handleDragT = (index, e, ui) => {
     const { x, y } = ui;
-    //console.log("New coordinates:", { x, y });
     const updatedText = [...texts];
     updatedText[index] = { ...updatedText[index], x, y };
     setText(updatedText);
@@ -140,7 +138,6 @@ function DocView() {
     event.preventDefault();
     var popup = document.getElementById('myPopup');
     popup.classList.toggle('show');
-    //console.log(popupText)
     setText([...texts, { id: Date.now(), content: popupText, x: 110, y: 100, fontSize: 12}]);
   }
 
@@ -165,9 +162,6 @@ const applyChange = async () => {
       let page_number = Math.floor(signature.y / 850);
       
       const formData = new FormData();
-      //console.log(curr)
-      //console.log(signature.x)
-      //console.log((signature.y%850))
       formData.append('document', curr);
       formData.append('signature_image', signature.image);
       formData.append('pageNum', page_number);
@@ -224,8 +218,6 @@ const applyChange = async () => {
     console.error("Error applying changes:", error);
   }
 };
-
-
 
 
   return (
@@ -311,9 +303,9 @@ const applyChange = async () => {
             </Document>
             </div>
              <div>
-              {<Button onClick={popOptSig}>Add Signature</Button>}                                     
-              <Button onClick={applyChange}>Apply Changes</Button>
+              {<Button onClick={popOptSig}>Add Signature</Button>}                      
               <Button onClick={pop}>Add Text</Button>
+              <Button onClick={applyChange}>Apply Changes</Button>
               <Button onClick={downloadFile}>Download</Button>
              </div>
               
